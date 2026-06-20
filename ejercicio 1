@@ -1,0 +1,192 @@
+//Realice un programa que grafique en pantalla un reducido laberinto con minimo 2 obstaculos, trace un "personaje",que bien puede ser una letra o una forma de su eleccion.Su personaje
+debe moverse dentro del laberinto y si choca con los bordes debe informar en pantalla al usuario que perdio.Incluya una meta, que al ser alcanzada (Al finaldel laberinto), 
+muestre en pantalla al usuario que gano y posteriormente resetee el laberinto.
+//
+
+
+
+
+
+#include<iostream>
+#include <conio.h>
+#include <windows.h>
+
+using namespace std;
+const int FILAS = 15;
+const int COLS  = 30;
+
+const int INICIO_X = 2;
+const int INICIO_Y = 2;
+const int META_X   = 27;
+const int META_Y   = 12;
+
+char mapa[FILAS][COLS + 1] = {
+    "##############################",
+    "#                            #",
+    "#                 #          #",
+    "#    ###          #          #",
+    "#    #            #          #",
+    "#    #    ######             #",
+    "#         #          #####  #",
+    "#         #               #  #",
+    "####      #    ########   #  #",
+    "#         #               #  #",
+    "#    #####     #######    #  #",
+    "#              #          #  #",
+    "#    #######   #             #",
+    "#                            #",
+    "##############################"
+};
+
+void gotoxy(int x, int y) {
+    COORD pos;
+    pos.X = x;
+    pos.Y = y;
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+}
+
+void ocultarCursor() {
+    CONSOLE_CURSOR_INFO info;
+    info.dwSize   = 1;
+    info.bVisible = FALSE;
+    SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &info);
+}
+
+void dibujarMapa() {
+    int f, c;
+    for (f = 0; f < FILAS; f++) {
+        for (c = 0; c < COLS; c++) {
+            gotoxy(c, f);
+            if (mapa[f][c] == '#') {
+                cout << '#';
+            } else {
+                cout << ' ';
+            }
+        }
+    }
+    gotoxy(META_X, META_Y);
+    cout << 'M';
+}
+
+void dibujarInstrucciones() {
+    gotoxy(32, 1);  cout << "=== LABERINTO ===";
+    gotoxy(32, 3);  cout << "W = arriba";
+    gotoxy(32, 4);  cout << "S = abajo";
+    gotoxy(32, 5);  cout << "A = izquierda";
+    gotoxy(32, 6);  cout << "D = derecha";
+    gotoxy(32, 7);  cout << "Q = salir";
+    gotoxy(32, 9);  cout << "# = pared";
+    gotoxy(32, 10); cout << "M = meta";
+    gotoxy(32, 11); cout << "O = tu personaje";
+    gotoxy(32, 13); cout << "Estado:";
+}
+
+void mostrarMensaje(string msg) {
+    gotoxy(32, 14);
+    cout << "                              ";
+    gotoxy(32, 14);
+    cout << msg;
+}
+
+int main() {
+    ocultarCursor();
+    system("mode con: cols=65 lines=20");
+
+    bool juegoActivo = true;
+
+    do {
+        system("cls");
+
+        int px = INICIO_X;
+        int py = INICIO_Y;
+        bool perdio = false;
+        bool gano   = false;
+        char tecla;
+
+        dibujarMapa();
+        dibujarInstrucciones();
+        mostrarMensaje("Muevete con W A S D");
+        gotoxy(px, py);
+        cout << 'O';
+
+        do {
+            tecla = _getch();
+
+            // soporte para teclas de flecha
+            if (tecla == 0 || tecla == (char)224) {
+                tecla = _getch();
+                switch ((unsigned char)tecla) {
+                    case 72: tecla = 'w'; break;
+                    case 80: tecla = 's'; break;
+                    case 75: tecla = 'a'; break;
+                    case 77: tecla = 'd'; break;
+                }
+            }
+
+            if (tecla >= 'A' && tecla <= 'Z') {
+                tecla = tecla + 32;
+            }
+
+            int nx = px;
+            int ny = py;
+
+            switch (tecla) {
+                case 'w': ny = py - 1; break;
+                case 's': ny = py + 1; break;
+                case 'a': nx = px - 1; break;
+                case 'd': nx = px + 1; break;
+                case 'q':
+                    juegoActivo = false;
+                    gano = true;
+                    break;
+                default:
+                    mostrarMensaje("Tecla no valida.");
+                    break;
+            }
+
+            if (tecla == 'w'  ||tecla == 's'  || tecla == 'a' || tecla == 'd') {
+
+                if (nx < 0  || nx >= COLS  || ny < 0 || ny >= FILAS) {
+                    perdio = true;
+                    gotoxy(0, 17);
+                    cout << "Perdiste! Chocaste con el borde del laberinto.";
+                    gotoxy(0, 18);
+                    cout << "Presiona una tecla para reiniciar...";
+                    _getch();
+
+
+} else if (mapa[ny][nx] == '#') {
+                    mostrarMensaje("Chocaste con una pared! Cuidado.");
+
+                } else if (nx == META_X && ny == META_Y) {
+                    gano = true;
+                    gotoxy(0, 17);
+                    cout << "Ganaste! Llegaste a la meta!";
+                    gotoxy(0, 18);
+                    cout << "Presiona una tecla para reiniciar...";
+                    _getch();
+
+                } else {
+                    gotoxy(px, py);
+                    cout << ' ';
+                    px = nx;
+                    py = ny;
+                    gotoxy(px, py);
+                    cout << 'O';
+                    mostrarMensaje("Sigue avanzando hacia M!");
+                }
+            }
+
+        } while (!perdio && !gano);
+
+        if (!juegoActivo) break;
+
+    } while (juegoActivo);
+
+    system("cls");
+    cout << "Gracias por jugar!" << endl;
+    cout << "Presiona una tecla para salir...";
+    _getch();
+
+    return 0;
+}
